@@ -337,4 +337,226 @@ The `derivedState` function is a custom hook that can be used to calculate deriv
 
 Finally, the paragraph mentions that the next lecture will cover how to start the quiz when the user clicks the "Let's start" button.
 
+# Setting Up a Timer With useEffect
+
+**Notes with code from the paragraph given below:**
+
+The paragraph describes how to implement a timer feature in a React application using a reducer and a cleanup function.
+
+**Steps:**
+
+1. Add a new state variable to the reducer to track the remaining seconds.
+```javascript
+// reducer.js
+export const reducer = (state, action) => {
+  switch (action.type) {
+    case "tick": {
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+      };
+    }
+    default:
+      return state;
+  }
+};
+```
+
+2. Add a new action type to the reducer to dispatch when the timer ticks.
+```javascript
+// reducer.js
+export const reducer = (state, action) => {
+  switch (action.type) {
+    case "tick": {
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+      };
+    }
+    case "finish": {
+      return {
+        ...state,
+        status: "finished",
+      };
+    }
+    default:
+      return state;
+  }
+};
+```
+
+3. Add a new action type to the reducer to dispatch when the game finishes.
+```javascript
+// reducer.js
+export const reducer = (state, action) => {
+  switch (action.type) {
+    case "tick": {
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+      };
+    }
+    case "finish": {
+      return {
+        ...state,
+        status: "finished",
+      };
+    }
+    default:
+      return state;
+  }
+};
+```
+
+4. Dispatch the `tick` action every second in the timer component using a cleanup function.
+```javascript
+// Timer.js
+import { useDispatch } from "react-redux";
+
+const Timer = ({ secondsRemaining }) => {
+  const dispatch = useDispatch();
+
+  const intervalId = useRef();
+
+  useEffect(() => {
+    intervalId.current = setInterval(() => {
+      dispatch({ type: "tick" });
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId.current);
+    };
+  }, []);
+
+  return <div>{secondsRemaining}</div>;
+};
+```
+
+5. Check if the seconds remaining are equal to zero in the reducer and dispatch the `finish` action if so.
+```javascript
+// reducer.js
+export const reducer = (state, action) => {
+  switch (action.type) {
+    case "tick": {
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+      };
+    }
+    case "finish": {
+      return {
+        ...state,
+        status: "finished",
+      };
+    }
+    default:
+      return state;
+  }
+};
+```
+
+6. Render the finished screen when the status is equal to `finished`.
+```javascript
+// App.js
+import { useSelector } from "react-redux";
+import Timer from "./Timer";
+
+const App = () => {
+  const { status } = useSelector((state) => state);
+
+  if (status === "finished") {
+    return <div>Game over!</div>;
+  }
+
+  return <div>
+    <Timer />
+  </div>;
+};
+```
+
+This code will implement a timer feature in the React application. The timer will tick every second and the game will finish when the seconds remaining are equal to zero.
+
+# useState vs. useReducer
+
+**Notes with code from the paragraph given below:**
+
+The paragraph compares `useState` and `useReducer` and provides a framework for deciding which one to use.
+
+**useState vs. useReducer**
+
+| Feature | useState | useReducer |
+|---|---|---|
+| Ideal for | Single pieces of state that are independent from each other | Multiple pieces of state that are related and dependent on each other or complex state |
+| State updating logic | Placed in event handlers or effects, spread all over the component or even located in child components if using lifted state | Centralized in one place, the reducer function |
+| State updates | Feel more imperative | Feel more declarative |
+| Easy to understand and use | Yes | No, requires writing a reducer function |
+
+**Framework for deciding between useState and useReducer**
+
+1. **Do you only need one piece of state?**
+    * If yes, use `useState`.
+2. **Do your states frequently need to be updated together?**
+    * If yes, consider using `useReducer`.
+3. **Are you willing to write a reducer function?**
+    * If no, keep using `useState`.
+4. **Do you need more than three or four pieces of related state, including objects?**
+    * If yes, and you are willing to write a reducer, use `useReducer`.
+5. **Do you have too many event handlers that make your components too large and confusing?**
+    * If yes, consider using `useReducer`.
+6. **If the answer to any of the above questions is no, then use `useState`.**
+
+**Conclusion**
+
+`useState` should be your default choice for managing React state. However, if `useState` gives you any of the problems discussed above, then consider using `useReducer`.
+
+**Example**
+
+In the game example mentioned in the paragraph, we need to update three pieces of state together (status, questions, and currentQuestion) when the user starts a new game. We are also willing to write a reducer function to handle this state update. Therefore, we would use `useReducer` in this case.
+
+**Code example**
+
+```javascript
+// reducer.js
+export const reducer = (state, action) => {
+  switch (action.type) {
+    case "startGame": {
+      return {
+        ...state,
+        status: "active",
+        questions: questions,
+        currentQuestion: 0,
+      };
+    }
+    default:
+      return state;
+  }
+};
+
+// App.js
+import { useSelector, useDispatch } from "react-redux";
+
+const App = () => {
+  const dispatch = useDispatch();
+  const { status } = useSelector((state) => state);
+
+  if (status === "active") {
+    // Render the game
+  } else {
+    // Render the start screen
+  }
+
+  return (
+    <div>
+      <button onClick={() => dispatch({ type: "startGame" })}>Start Game</button>
+    </div>
+  );
+};
+```
+
+In this example, we use `useReducer` to manage the state of the game. The reducer function has a single case, `startGame`, which updates the state to start the game. We dispatch the `startGame` action from the start screen button.
+
+**Conclusion**
+
+`useReducer` is a powerful tool for managing complex state in React applications. However, it can be more difficult to understand and use than `useState`. Therefore, it is important to choose the right tool for the job. Use the framework above to help you decide whether to use `useState` or `useReducer`.
+
 
