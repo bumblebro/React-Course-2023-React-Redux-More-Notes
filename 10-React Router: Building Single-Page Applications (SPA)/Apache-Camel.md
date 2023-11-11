@@ -102,3 +102,46 @@ public class JSONToCSVRoute extends RouteBuilder {
 ```
 
 This route reads a JSON file from 'data/input.json', converts it to a POJO using Jackson JSON data format, applies any additional processing, converts the POJO to CSV using CsvDataFormat, and writes the CSV output to 'data/output.csv'.
+
+Reading messages from a queue in Apache Camel involves defining a Camel route that specifies the queue to consume from and the processing logic for the received messages. The route can include data formats, processors, and filters to handle the message content and route it to the appropriate destination.
+
+**Steps to Read Messages from a Queue:**
+
+1. **Configure JMS Connection:**
+    - Include the appropriate JMS dependency (e.g., ActiveMQ, Artemis, JMS Service Provider) in your project.
+    - Create a JMS connection factory for the specific JMS provider.
+    - Configure the JMS connection factory with connection details (e.g., broker URL, username, password).
+
+2. **Define Camel Route:**
+    - Create a Camel route using a RouteBuilder class that defines the message flow for consuming and processing messages from the queue.
+    - Use the 'from' component with the JMS endpoint URI to specify the queue to consume from (e.g., 'jms:queue:myQueue').
+    - Apply a processor to handle the received message content. The processor can perform actions like logging, data manipulation, or routing to other destinations.
+    - Optionally, use a 'to' component to specify a destination for the processed message (e.g., another queue, file, database).
+
+**Example Route for Consuming JMS Messages:**
+
+```java
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jms.JmsComponent;
+
+public class JMSConsumerRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        // Configure JMS connection
+        JmsComponent jmsComponent = JmsComponent.jmsConnectionFactory("activemqConnectionFactory");
+        getContext().addComponent("jms", jmsComponent);
+
+        // Define Camel route
+        from("jms:queue:myQueue")
+                .log("Received message: ${body}")
+                .process(exchange -> {
+                    // Perform additional processing on message content
+                })
+                .to("file:data/processed");
+    }
+}
+```
+
+This route consumes messages from the 'myQueue' queue, logs the message content, performs additional processing, and saves the processed message to 'data/processed'. The route demonstrates the basic structure for consuming and processing messages from a queue using Apache Camel.
+
