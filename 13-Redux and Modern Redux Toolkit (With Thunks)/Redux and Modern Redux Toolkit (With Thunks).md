@@ -475,3 +475,757 @@ const Customer = () => {
 - The useSelector hook takes a callback function that receives the entire Redux store state.
 - The callback function can extract any data from the store state and return it.
 - The component will re-render whenever the store state changes, ensuring that the data is always up-to-date.
+
+
+# Dispatching Actions from Our React App
+
+**Dispatching Actions to Redux Store from React Components**
+
+**Prerequisites:**
+
+- Redux and React Redux packages are installed.
+- A Redux store has been created.
+- Action creators are defined in Redux slices.
+
+**Steps:**
+
+1. **Import the useDispatch hook from React Redux.**
+
+```javascript
+import React from 'react';
+import { useDispatch } from 'react-redux';
+```
+
+2. **Inside a React component, use the useDispatch hook to get the dispatch function.**
+
+```javascript
+const CreateCustomer = () => {
+  const dispatch = useDispatch();
+  ...
+};
+```
+
+3. **Call the dispatch function with the action creator function and any necessary arguments.**
+
+```javascript
+const handleClick = () => {
+  const fullName = firstName + ' ' + lastName;
+  const nationalID = idNumber;
+
+  if (!fullName || !nationalID) {
+    return;
+  }
+
+  dispatch(createCustomer({ fullName, nationalID }));
+};
+```
+
+**Explanation:**
+
+- The useDispatch hook provides a way to access the Redux store's dispatch function directly from within a React component.
+- The dispatch function is used to trigger actions, which are objects that signal a change to the Redux store.
+- The action creator function returns the action object that will be dispatched.
+
+**Example:**
+
+```javascript
+// action creator in customerSlice.js
+export const createCustomer = (customer) => ({
+  type: 'CREATE_CUSTOMER',
+  payload: customer,
+});
+
+// component dispatching an action
+const CreateCustomer = () => {
+  const dispatch = useDispatch();
+
+  const handleClick = () => {
+    const fullName = firstName + ' ' + lastName;
+    const nationalID = idNumber;
+
+    if (!fullName || !nationalID) {
+      return;
+    }
+
+    dispatch(createCustomer({ fullName, nationalID }));
+  };
+
+  return (
+    <div>
+      <input type="text" placeholder="First Name" />
+      <input type="text" placeholder="Last Name" />
+      <input type="text" placeholder="National ID" />
+      <button onClick={handleClick}>Create Customer</button>
+    </div>
+  );
+};
+```
+
+In this example, the CreateCustomer component dispatches the CREATE_CUSTOMER action when the user clicks the "Create Customer" button. The action creator provides the necessary information to create a new customer in the Redux store.
+
+# The Legacy Way of Connecting Components to Redux
+
+**Connecting React Components to Redux Store with Connect API**
+
+**Prerequisites:**
+
+- Redux and React Redux packages are installed.
+- A Redux store has been created.
+
+**Steps:**
+
+1. **Import the connect function from React Redux.**
+
+```javascript
+import React from 'react';
+import { connect } from 'react-redux';
+```
+
+2. **Create a mapStateToProps function that takes the Redux store state as an argument and returns an object with the props that the component needs.**
+
+```javascript
+const mapStateToProps = (state) => ({
+  balance: state.account.balance,
+});
+```
+
+3. **Pass the mapStateToProps function to the connect function and the component you want to connect.**
+
+```javascript
+const BalanceDisplay = (props) => {
+  const { balance } = props;
+
+  return (
+    <div>
+      Balance: ${formatCurrency(balance)}
+    </div>
+  );
+};
+
+export default connect(mapStateToProps)(BalanceDisplay);
+```
+
+**Explanation:**
+
+- The connect API is a higher-order component that wraps the component you want to connect and injects the props that the component needs.
+- The mapStateToProps function is used to select the parts of the Redux store state that the component needs.
+- The connect function returns a new component that is wrapped by the connect higher-order component.
+
+**Example:**
+
+```javascript
+// component without connect API
+const BalanceDisplay = (props) => {
+  // props.balance will always be undefined
+  const { balance } = props;
+
+  return (
+    <div>
+      Balance: ${formatCurrency(balance)}
+    </div>
+  );
+};
+
+// connecting the component using connect API
+const BalanceDisplayConnected = connect(mapStateToProps)(BalanceDisplay);
+```
+
+In this example, the BalanceDisplay component is connected to the Redux store using the connect API. The mapStateToProps function extracts the balance property from the Redux store state and passes it to the BalanceDisplay component as a prop. The BalanceDisplayConnected component is the new component that is wrapped by the connect higher-order component.
+ 
+# Redux Middleware and Thunks
+
+**Understanding Redux Middleware**
+
+**What is Middleware?**
+
+Middleware is a function that sits between dispatching an action and the store in Redux. It allows developers to run some code after dispatching an action, but before that action reaches the reducer in the store. This makes it a perfect place to handle asynchronous operations, such as making API calls.
+
+**Why use Middleware?**
+
+There are several reasons why you might want to use middleware in your Redux application:
+
+* **Handle asynchronous operations:** Middleware allows you to make asynchronous API calls or perform other time-consuming tasks without blocking the main thread.
+* **Implement side effects:** Middleware can be used to log actions to the console, set timers, or even pause or cancel actions altogether.
+* **Encapsulate logic:** Middleware can be used to encapsulate complex logic away from components and reducers.
+
+**How does Middleware work?**
+
+When an action is dispatched, it is first passed to the middleware chain. Each middleware in the chain has the opportunity to intercept the action and perform some custom logic. If the middleware does not modify the action, it passes it on to the next middleware in the chain. Once the action reaches the end of the middleware chain, it is finally dispatched to the store.
+
+**Redux Thunk**
+
+Redux Thunk is a popular middleware that allows you to handle asynchronous operations in your Redux application. It provides a way to dispatch functions instead of plain objects, and these functions can perform asynchronous operations and then dispatch actions with the results.
+
+**Example:**
+
+```javascript
+const fetchUserData = (userId) => {
+  return (dispatch) => {
+    fetch(`https://api.example.com/users/${userId}`)
+      .then(response => response.json())
+      .then(userData => {
+        dispatch({
+          type: 'FETCH_USER_DATA',
+          payload: userData
+        });
+      });
+  };
+};
+```
+
+In this example, the fetchUserData function is a thunk action creator. It returns a function that dispatches a FETCH_USER_DATA action with the user data once it is fetched from the API.
+
+**Implementing Middleware in your application**
+
+To use middleware in your Redux application, you will need to install a middleware package, such as Redux Thunk. Then, you will need to configure the middleware chain in your store creation process. For example, to use Redux Thunk, you would do the following:
+
+```javascript
+import { createStore, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+import reducer from './reducer';
+
+const store = createStore(reducer, applyMiddleware(thunk));
+```
+
+Once you have configured the middleware chain, you can use thunk action creators to dispatch asynchronous actions.
+
+# Making an API Call With Redux Thunks
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**How to Use Redux Thunks to Implement a Feature Where the User Can Deposit Money into the Account in a Foreign Currency**
+
+**Step 1: Install the Redux Thunk Middleware**
+
+```bash
+npm install redux-thunk
+```
+
+**Step 2: Apply the Redux Thunk Middleware to the Store**
+
+```javascript
+import thunk from 'redux-thunk';
+
+const store = createStore(reducer, applyMiddleware(thunk));
+```
+
+**Step 3: Use the Redux Thunk Middleware in Action Creator Functions**
+
+```javascript
+import thunk from 'redux-thunk';
+
+export const depositMoney = (amount, currency) => {
+  if (currency === 'USD') {
+    return {
+      type: 'ACCOUNT_DEPOSIT',
+      payload: {
+        amount
+      }
+    };
+  } else {
+    return async (dispatch, getState) => {
+      const response = await fetch('https://frankfurter.app/latest?from=' + currency + '&to=USD');
+      const data = await response.json();
+      const convertedAmount = amount * data.rates.USD;
+
+      dispatch({
+        type: 'ACCOUNT_DEPOSIT',
+        payload: {
+          amount: convertedAmount
+        }
+      });
+    };
+  }
+};
+```
+
+**Step 4: Dispatch the Action with the Currency**
+
+```javascript
+store.dispatch(depositMoney(100, 'EUR'));
+```
+
+**Step 5: Add a Loading Indicator**
+
+```javascript
+const initialState = {
+  amount: 0,
+  isLoading: false
+};
+
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'ACCOUNT_DEPOSIT':
+      return {
+        ...state,
+        amount: action.payload.amount
+      };
+    case 'ACCOUNT_CONVERTING_CURRENCY':
+      return {
+        ...state,
+        isLoading: true
+      };
+    case 'ACCOUNT_CONVERSION_COMPLETE':
+      return {
+        ...state,
+        isLoading: false
+      };
+    default:
+      return state;
+  }
+};
+
+export const depositMoney = (amount, currency) => {
+  if (currency === 'USD') {
+    return {
+      type: 'ACCOUNT_DEPOSIT',
+      payload: {
+        amount
+      }
+    };
+  } else {
+    return async (dispatch, getState) => {
+      dispatch({
+        type: 'ACCOUNT_CONVERTING_CURRENCY'
+      });
+
+      const response = await fetch('https://frankfurter.app/latest?from=' + currency + '&to=USD');
+      const data = await response.json();
+      const convertedAmount = amount * data.rates.USD;
+
+      dispatch({
+        type: 'ACCOUNT_CONVERSION_COMPLETE'
+      });
+
+      dispatch({
+        type: 'ACCOUNT_DEPOSIT',
+        payload: {
+          amount: convertedAmount
+        }
+      });
+    };
+  }
+};
+```
+
+**Step 6: Disable the Button When Loading**
+
+```javascript
+<button disabled={isLoading}>Deposit Money</button>
+```
+
+**Step 7: Show a Loading Indicator**
+
+```javascript
+{ isLoading ? 'Loading...' : 'Deposit Money' }
+```
+
+**Step 8: Dispatch an Action to Reset the Loading Indicator**
+
+```javascript
+return {
+  ...state,
+  isLoading: false
+};
+```
+
+This code will implement a feature where the user can deposit money into the account in a foreign currency, which will then be converted by calling an external API. The user will be able to see a loading indicator while the conversion is in progress, and the button will be disabled while the conversion is taking place.
+
+# The Redux DevTools
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**Installing and Using the Redux Dev Tools**
+
+**Step 1: Install the Google Chrome Extension**
+
+1. Open the Chrome Web Store and search for "Redux DevTools".
+2. Click on the "Redux DevTools" extension and click "Add to Chrome".
+3. Wait for the extension to install.
+
+**Step 2: Install the NPM Package**
+
+1. Open a terminal window and navigate to your project directory.
+2. Run the following command:
+
+```bash
+npm install redux-devtools-extension
+```
+
+**Step 3: Wrap the Apply Middleware Function in ComposeWithDevTools**
+
+1. Open your Redux store configuration file.
+2. Import the `composeWithDevTools` function from the `redux-devtools-extension` package.
+3. Wrap the `applyMiddleware` function in the `composeWithDevTools` function.
+
+```javascript
+import { createStore, applyMiddleware } from 'redux';
+import { composeWithDevTools } from 'redux-devtools-extension';
+
+const store = createStore(reducer, composeWithDevTools(applyMiddleware(thunk)));
+```
+
+**Exploring the Redux Dev Tools**
+
+1. Click on the "Redux" tab in the Chrome Developer Tools.
+2. You should see a list of all the actions that have been dispatched to your Redux store.
+3. You can click on an action to see its details, including the action type, payload, and the resulting state.
+4. You can use the slider at the bottom of the screen to jump back in time to previous states.
+5. You can manually dispatch actions by typing the action type and payload into the input field at the bottom of the screen.
+
+**Using the Redux Dev Tools to Debug a Bug**
+
+1. In the Redux Dev Tools, notice that the `account/convertingCurrency` action is being dispatched even when the currency is US dollars.
+2. Use the Chrome Developer Tools to find the code that is dispatching the action.
+3. Fix the bug by resetting the currency to `USD` after the deposit is made.
+
+**Conclusion**
+
+The Redux Dev Tools are a powerful tool for debugging Redux applications. They allow you to see all the actions that have been dispatched to your store, and to jump back in time to previous states. You can also use them to manually dispatch actions.
+
+# What is Redux Toolkit (RTK)?
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**Redux Toolkit: The Modern Way of Writing Redux**
+
+**What is Redux Toolkit?**
+
+Redux Toolkit is an opinionated approach to writing Redux code that encourages the use of best practices. It simplifies Redux development by providing a number of pre-built utilities and configurations, including:
+
+* **Automatic action creators:** Redux Toolkit can automatically generate action creators from reducer functions. This reduces boilerplate code and makes it easier to create actions.
+* **Immutable state updates:** Redux Toolkit uses the Immer library to make it easier to write immutable state updates. Immer allows you to write code as if you were mutating state directly, but it automatically converts your mutations to non-mutating updates behind the scenes.
+* **Middleware setup:** Redux Toolkit automatically sets up Thunk middleware and the Redux DevTools extension. This saves you from having to manually configure these tools.
+
+**Advantages of Redux Toolkit**
+
+* **Reduced boilerplate code:** Redux Toolkit simplifies Redux development by providing a number of pre-built utilities and configurations. This can save you a lot of time and effort, especially when working on large applications.
+* **Easier to write immutable state updates:** Immer makes it easier to write immutable state updates by allowing you to write code as if you were mutating state directly. This can make your code more readable and easier to understand.
+* **Out-of-the-box middleware and developer tools:** Redux Toolkit automatically sets up Thunk middleware and the Redux DevTools extension. This saves you from having to manually configure these tools, which can be a bit error-prone.
+
+**Compatibility with Classic Redux**
+
+Redux Toolkit is 100% compatible with classic Redux. This means that you can use classic Redux in one part of your application and Redux Toolkit in another part. This can be useful if you're migrating an existing Redux application to Redux Toolkit, or if you need to use a specific feature of classic Redux that isn't available in Redux Toolkit.
+
+**Conclusion**
+
+Redux Toolkit is a powerful tool that can make Redux development easier and more enjoyable. It's worth considering if you're working on a Redux application, or if you're learning Redux for the first time.
+
+**Additional Notes**
+
+* Redux Toolkit is still under active development, so there may be some breaking changes in the future. It's a good idea to keep up with the latest releases and documentation.
+* Redux Toolkit is not a replacement for Redux. It's still important to understand the fundamentals of Redux before using Redux Toolkit.
+
+# Creating the Store With RTK
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**Converting the Store to Redux Toolkit**
+
+**Step 1: Install Redux Toolkit**
+
+1. Open a terminal window and navigate to your project directory.
+2. Run the following command:
+
+```bash
+npm install @reduxjs/toolkit
+```
+
+**Step 2: Import configureStore**
+
+1. Open your Redux store configuration file.
+2. Import the `configureStore` function from the `@reduxjs/toolkit` package.
+
+```javascript
+import { configureStore } from '@reduxjs/toolkit';
+```
+
+**Step 3: Use configureStore to Create the Store**
+
+1. Call the `configureStore` function and pass it an object of options.
+2. The `reducer` property should specify an object of reducers.
+3. The `middleware` property can be used to specify middleware to be used by the store.
+
+```javascript
+const store = configureStore({
+  reducer: {
+    account: accountReducer,
+    customer: customerReducer
+  }
+});
+```
+
+**Step 4: Export the Store**
+
+1. Export the store from the store configuration file.
+
+```javascript
+export default store;
+```
+
+**Conclusion**
+
+Redux Toolkit can simplify the process of setting up a Redux store. It automatically combines reducers, adds middleware, and sets up the Redux DevTools extension. This can save you a lot of time and effort, especially when working on large applications.
+
+**Additional Notes**
+
+* You can still use the `createStore` function from the classic Redux package if you prefer. However, it is recommended to use `configureStore` from Redux Toolkit instead.
+* You can still use the Thunk middleware with Redux Toolkit. It is automatically added to the store by default.
+* You can still use the Redux DevTools extension with Redux Toolkit. It is automatically set up by default.
+
+# Creating the Account Slice
+
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**Converting the Account State Slice to Redux Toolkit**
+
+**Step 1: Install createSlice**
+
+1. Open a terminal window and navigate to your project directory.
+2. Run the following command:
+
+```bash
+npm install @reduxjs/toolkit
+```
+
+**Step 2: Import createSlice**
+
+1. Open your account state slice file.
+2. Import the `createSlice` function from the `@reduxjs/toolkit` package.
+
+```javascript
+import { createSlice } from '@reduxjs/toolkit';
+```
+
+**Step 3: Create the Slice**
+
+1. Call the `createSlice` function and pass it an object of options.
+2. The `name` property should specify the name of the slice.
+3. The `initialState` property should specify the initial state of the slice.
+4. The `reducers` property should specify an object of reducers.
+
+```javascript
+const accountSlice = createSlice({
+  name: 'account',
+  initialState: {
+    balance: 0,
+    loan: 0,
+    loanPurpose: '',
+  },
+  reducers: {
+    deposit: (state, action) => {
+      state.balance += action.payload;
+    },
+    withdraw: (state, action) => {
+      state.balance -= action.payload;
+    },
+    requestLoan: (state, action) => {
+      if (state.loan === 0) {
+        state.loan = action.payload.amount;
+        state.loanPurpose = action.payload.purpose;
+      }
+    },
+    payLoan: (state) => {
+      state.loan = 0;
+      state.loanPurpose = '';
+      state.balance -= state.loan;
+    },
+  },
+});
+```
+
+**Step 4: Export the Slice**
+
+1. Export the reducer and actions from the slice.
+
+```javascript
+export default accountSlice.reducer;
+export const { deposit, withdraw, requestLoan, payLoan } = accountSlice.actions;
+```
+
+**Conclusion**
+
+Redux Toolkit makes it easier to write state slices by providing a `createSlice` function that automatically generates action creators and simplifies reducer logic. This can save you time and effort, especially when working on large applications.
+
+**Additional Notes**
+
+* You can still write your own reducer functions if you prefer.
+* You can still use the `combineReducers` function from classic Redux if you need to combine multiple slices into a single store.
+* Redux Toolkit also provides other features, such as middleware and dev tools integration, that can make your Redux development experience even more enjoyable.
+
+# Back to Thunks
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**Restoring Thunks in Redux Toolkit**
+
+**Step 1: Reuse Existing Action Creators**
+
+1. Redux Toolkit automatically provides Thunks, so there is no need to install anything.
+2. You can reuse your existing action creators by copying and pasting them into your Redux Toolkit slice.
+3. Make sure that the action creators have the same name and type as the reducers in your slice.
+
+```javascript
+// Reuse the deposit action creator
+export const deposit = (amount, currency) => ({
+  type: 'account/deposit',
+  payload: {
+    amount: amount,
+    currency: currency,
+  },
+});
+```
+
+**Step 2: Create a Reducer for Currency Conversion**
+
+1. Create a new reducer for currency conversion.
+2. The reducer should set the `loading` state to `true` before the conversion and `false` after the conversion.
+
+```javascript
+const convertCurrency = (state) => {
+  state.loading = true;
+  // Convert currency here
+  state.loading = false;
+};
+```
+
+**Step 3: Export Action Creators and Reducer**
+
+1. Export the action creators and reducer from your slice.
+
+```javascript
+export const { deposit, withdraw, requestLoan, payLoan } = accountSlice.actions;
+export default accountSlice.reducer;
+export const convertCurrency = accountSlice.actions.convertCurrency;
+```
+
+**Conclusion**
+
+Redux Toolkit makes it easy to use Thunks without any additional setup. You can reuse your existing action creators and create new reducers for specific tasks. This flexibility makes Redux Toolkit a powerful tool for managing asynchronous operations in your Redux applications.
+
+**Additional Notes**
+
+* You can use the `createAsyncThunk` function from Redux Toolkit if you prefer to have more control over your Thunk actions.
+* Redux Toolkit automatically integrates with React DevTools, so you can debug your Thunk actions and see their state changes in the browser.
+* Redux Toolkit provides a number of other features, such as middleware and dev tools integration, that can make your Redux development experience even more enjoyable.
+
+# Creating the Customer Slice
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**Converting the Customer Slice to Redux Toolkit**
+
+**Step 1: Create the Slice**
+
+1. Call the `createSlice` function and pass it an object of options.
+2. The `name` property should specify the name of the slice.
+3. The `initialState` property should specify the initial state of the slice.
+4. The `reducers` property should specify an object of reducers.
+
+```javascript
+const customerSlice = createSlice({
+  name: 'customer',
+  initialState: {
+    customers: [],
+  },
+  reducers: {
+    createCustomer: (state, action) => {
+      state.customers.push({
+        fullName: action.payload.fullName,
+        nationalID: action.payload.nationalID,
+        createdAt: new Date().toISOString(),
+      });
+    },
+    updateName: (state, action) => {
+      const customerIndex = state.customers.findIndex(customer => customer.nationalID === action.payload.nationalID);
+      state.customers[customerIndex].fullName = action.payload.fullName;
+    },
+  },
+});
+```
+
+**Step 2: Prepare Action Payloads**
+
+1. Create a prepare function for each action creator that requires data preparation.
+2. The prepare function should return an object containing the payload data.
+
+```javascript
+// Prepare payload for createCustomer action creator
+const prepareCreateCustomerPayload = (fullName, nationalID) => ({
+  fullName,
+  nationalID,
+  createdAt: new Date().toISOString(),
+});
+```
+
+**Step 3: Export Action Creators and Reducer**
+
+1. Export the action creators and reducer from the slice.
+
+```javascript
+export const { createCustomer, updateName } = customerSlice.actions;
+export default customerSlice.reducer;
+```
+
+**Conclusion**
+
+Redux Toolkit simplifies the process of creating slices by providing a `createSlice` function that automatically generates action creators and reduces boilerplate code. The use of prepare functions for data preparation further enhances the flexibility and organization of Redux actions. This streamlined approach makes Redux Toolkit a valuable tool for managing state in your React applications.
+
+**Additional Notes**
+
+* You can still write your own reducer functions if you prefer.
+* You can still use the `combineReducers` function from classic Redux if you need to combine multiple slices into a single store.
+* Redux Toolkit also provides other features, such as middleware and dev tools integration, that can make your Redux development experience even more enjoyable.
+
+# Redux vs. Context API
+
+Sure, here are detailed notes with code from the paragraph given below:
+
+**Comparing Redux with React's Context API**
+
+**Overview**
+
+Redux and React's Context API are both solutions for managing global state in React applications. They each have their own strengths and weaknesses, making them suitable for different use cases.
+
+**Advantages of Context API + useReducer**
+
+* Built-in to React, no additional packages required
+* Straightforward setup for single context and useReducer
+* Simple for sharing values that don't change often, such as app color theme, language, or authenticated user
+
+**Disadvantages of Context API + useReducer**
+
+* Can lead to "provider hell" with multiple state slices
+* No built-in mechanism for async operations
+* Performance optimization requires more effort compared to Redux
+* Limited DevTools compared to Redux
+
+**Advantages of Redux**
+
+* Initial setup can be more complex, but easier to manage additional state slices
+* Built-in support for middleware to handle asynchronous operations
+* Highly optimized for frequent state updates, minimizing wasted renders
+* Excellent DevTools for debugging and inspecting state
+
+**Disadvantages of Redux**
+
+* Requires additional packages and increases bundle size
+* More complex to implement and understand compared to Context API
+
+**Usage Recommendations**
+
+* **Context API + useReducer:**
+    * Small applications
+    * Sharing values that don't change often
+    * Simple prop drilling problems
+    * Managing state in local sub-trees of the application
+
+* **Redux:**
+    * Large applications with complex UI state
+    * Frequent state updates (shopping carts, open tabs, data filters)
+    * Complex state with nested objects
+
+**Conclusion**
+
+The choice between Redux and Context API depends on the specific needs of your project. Carefully consider the factors mentioned above to determine which solution is best suited for your application.
